@@ -56,7 +56,7 @@ void main(void) {
   vec2 pos = 2. * gl_FragCoord.xy / resolution.xy - 1.0;
   pos.x *= resolution.x / resolution.y;
 
-  float dy = clamp(-10000., 1000., - 20000. * (mouse.y - 0.5));
+  float dy = clamp(- 10000., 0., - 20000. * (mouse.y - 0.5));
   vec3 campos = vec3(0, 6000. + dy, 6000. * time);
   vec3 camdir = normalize(vec3(- (mouse.x - 0.5), 0, 1));
   vec3 right = normalize(cross(camdir, vec3(0, 1, 0)));
