@@ -56,7 +56,8 @@ void main(void) {
   vec2 pos = 2. * gl_FragCoord.xy / resolution.xy - 1.0;
   pos.x *= resolution.x / resolution.y;
 
-  vec3 campos = vec3(0, 4000. - 10000. * (mouse.y - 0.5), 6000. * time);
+  float dy = clamp(-10000., 1000., - 20000. * (mouse.y - 0.5));
+  vec3 campos = vec3(0, 6000. + dy, 6000. * time);
   vec3 camdir = normalize(vec3(- (mouse.x - 0.5), 0, 1));
   vec3 right = normalize(cross(camdir, vec3(0, 1, 0)));
   vec3 up = normalize(cross(right, camdir));
@@ -67,7 +68,7 @@ void main(void) {
   float rayStrength = 1.;
   vec3 ray = campos;
   for (int i = 0; i < 50; i++) {
-    float areaDensity = 1. - smoothstep(0., 5000., ray.y);
+    float areaDensity = smoothstep(-20000., -15000., ray.y) - smoothstep(0., 5000., ray.y);
     float localDensity = smoothstep(0.1, 1.0, fbm(ray * 0.0003));
     vec3 localcolor = vec3(mix(1.1, 0.3, localDensity));
     float alpha = rayStrength * areaDensity * localDensity;
