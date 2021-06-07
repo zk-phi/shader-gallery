@@ -126,8 +126,11 @@ render();
 /* ---- UI */
 
 const code = document.getElementById("code");
-code.innerHTML = fragmentShader;
+code.append(fragmentShader);
 
-document.getElementById("btn").addEventListener("click", () => {
+const btn = document.getElementById("btn");
+btn.append(` (${fragmentShader.split("\n").length} lines)`);
+
+btn.addEventListener("click", () => {
   document.getElementById("code").classList.toggle("hidden");
 });
