@@ -98,8 +98,8 @@ updateResolution();
 let mouse = [0.5, 0.5];
 const updateMousePos = (e) => {
   mouse = [
-    e.clientX / window.innerWidth * QUALITY_FACTOR,
-    1 - e.clientY / window.innerHeight * QUALITY_FACTOR
+    e.clientX / window.innerWidth,
+    1 - e.clientY / window.innerHeight
   ];
 };
 const resetMousePos = (e) => {
