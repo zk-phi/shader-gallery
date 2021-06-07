@@ -98,12 +98,14 @@ updateResolution();
 let mouse = [0.5, 0.5];
 const updateMousePos = (e) => {
   mouse = [
-    e.offsetX / canvas.width * QUALITY_FACTOR,
-    1 - e.offsetY / canvas.height * QUALITY_FACTOR
+    e.clientX / window.innerWidth * QUALITY_FACTOR,
+    1 - e.clientY / window.innerHeight * QUALITY_FACTOR
   ];
 };
-const resetMousePos = () => {
-  mouse = [0.5, 0.5];
+const resetMousePos = (e) => {
+  if (!e.toElement && !e.relatedTarget) {
+    mouse = [0.5, 0.5];
+  }
 };
 window.addEventListener('mousemove', updateMousePos);
 window.addEventListener('mouseout', resetMousePos);
@@ -120,3 +122,12 @@ const render = () => {
   window.requestAnimationFrame(render);
 };
 render();
+
+/* ---- UI */
+
+const code = document.getElementById("code");
+code.innerHTML = fragmentShader;
+
+document.getElementById("btn").addEventListener("click", () => {
+  document.getElementById("code").classList.toggle("hidden");
+});
