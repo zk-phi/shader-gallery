@@ -27,7 +27,7 @@ vec2 rot2d(vec2 pos, float rad) {
 }
 
 vec2 rep (vec2 pos) {
-  float time = mod(time + .125 * sin(PI * (time + .25) * 4.), 2.);
+  float time = mod(time, 2.);
   vec2 d1 = vec2(0, 1) * .25 * clamp(time, 0., 1.);
   vec2 d2 = vec2(1, 0) * .25 * clamp(time - 1., 0., 1.);
   return mod(pos - d1 + d2, 0.5) - 0.5 * 0.5;
