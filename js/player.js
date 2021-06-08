@@ -1,4 +1,3 @@
-
 const QUALITY_FACTOR = 0.5;
 
 const log = document.getElementById("log");
@@ -125,12 +124,17 @@ render();
 
 /* ---- UI */
 
-const code = document.getElementById("code");
-code.append(fragmentShader);
+const editor = document.getElementById("editor");
+editor.append(fragmentShader);
+
+const acejs = ace.edit("editor");
+acejs.setReadOnly(true);
+acejs.setTheme("ace/theme/xcode");
+acejs.session.setMode("ace/mode/glsl");
 
 const btn = document.getElementById("btn");
 btn.append(` (${fragmentShader.split("\n").length} lines)`);
 
 btn.addEventListener("click", () => {
-  document.getElementById("code").classList.toggle("hidden");
+  editor.classList.toggle("hidden");
 });
