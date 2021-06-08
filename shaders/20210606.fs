@@ -57,7 +57,7 @@ void main(void) {
   pos.x *= resolution.x / resolution.y;
 
   float dy = clamp(- 10000., 0., - 20000. * (mouse.y - 0.5));
-  vec3 campos = vec3(0, 6000. + dy, 6000. * time);
+  vec3 campos = vec3(0, 4000. + dy, 6000. * time);
   vec3 camdir = normalize(vec3(- (mouse.x - 0.5), 0, 1));
   vec3 right = normalize(cross(camdir, vec3(0, 1, 0)));
   vec3 up = normalize(cross(right, camdir));
