@@ -96,6 +96,7 @@ updateResolution();
 
 let mouse = [0.5, 0.5];
 const updateMousePos = (e) => {
+  e.preventDefault();
   if (e.touches) {
     e = e.touches[0];
   }
@@ -110,9 +111,9 @@ const resetMousePos = (e) => {
   }
 };
 window.addEventListener('mousemove', updateMousePos);
-window.addEventListener('touchmove', updateMousePos);
 window.addEventListener('mouseout', resetMousePos);
-window.addEventListener('touchend', resetMousePos);
+canvas.addEventListener('touchmove', updateMousePos);
+canvas.addEventListener('touchend', resetMousePos);
 
 let throttle = false;
 const render = () => {
