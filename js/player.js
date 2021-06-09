@@ -96,6 +96,9 @@ updateResolution();
 
 let mouse = [0.5, 0.5];
 const updateMousePos = (e) => {
+  if (e.touches) {
+    e = e.touches[0];
+  }
   mouse = [
     e.clientX / window.innerWidth,
     1 - e.clientY / window.innerHeight
@@ -107,7 +110,9 @@ const resetMousePos = (e) => {
   }
 };
 window.addEventListener('mousemove', updateMousePos);
+window.addEventListener('touchmove', updateMousePos);
 window.addEventListener('mouseout', resetMousePos);
+window.addEventListener('touchend', resetMousePos);
 
 let throttle = false;
 const render = () => {
