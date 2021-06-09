@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 
 #define PI 3.141592653589793
 #define EPS 0.001
