@@ -1,4 +1,4 @@
-const QUALITY_FACTOR = 0.5;
+const QUALITY_FACTOR = 1;
 
 const log = document.getElementById("log");
 const canvas = document.getElementById("canvas");
