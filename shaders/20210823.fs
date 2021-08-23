@@ -91,19 +91,28 @@ float fbm(vec3 x) {
 
 // ---- main (inspired by https://ae-style.net/tutorials/e06.html)
 
+vec3 softlight(vec3 base, vec3 ref) {
+  vec3 flag = step(vec3(.5, .5, .5), ref);
+  vec3 res1 = 2. * base * ref + base * base * (1. - 2. * ref);
+  vec3 res2 = 2. * base * (1. - ref) + sqrt(base) * (2. * ref - 1.);
+  return (1. - flag) * res1 + flag * res2;
+}
+
 void main(void) {
   vec2 d = resolution.xy / (gl_FragCoord.xy + 1.);
 
   // step1 bg
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), gl_FragCoord.y / resolution.y);
 
-  // step2 cloud
-  color += fbm(vec3(gl_FragCoord.x + time * 15., gl_FragCoord.y, 0.) / 100.) * .25;
+  // step2 bg noise
+  vec3 noise = vec3(fbm(vec3(gl_FragCoord.x + 10. * time, gl_FragCoord.y, 0.) / 100.));
+  color = softlight(color, noise);
 
   // step3 light
-  float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .3, 0.));
-  float lightEndLen = 500.;
-  color += .3 * max(0., 1. - lightGradLen / lightEndLen) * vec3(0.34, 0.67, 0.88);
+  float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .4, -.3 * resolution.y));
+  float lightPos = max(0., 1. - lightGradLen / (1.3 * resolution.y));
+  vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
+  color += light * .4;
 
   // step4 small stars
   float starValue1 = 1. - length(cellular2x2(gl_FragCoord.xy /4.));
@@ -111,17 +120,16 @@ void main(void) {
   color += (.2 + .6 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue1;
   // color = vec3(1.) * starValue1;
 
-  // step5 small stars
+  // step5 large stars
   float starValue2 = 1. - length(cellular2x2(gl_FragCoord.xy /20.));
   starValue2 = min(1., pow(starValue2 * 1.3, 50.));
-  color += (1.5 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue2;
+  color += (2. * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue2;
   // color = vec3(1.) * starValue2;
 
   // step6 skyline
   float skyline1 = fbm(vec3(1900., gl_FragCoord.x * .002, 0.));
-  float skyline2 = (1. - skyline1) * fbm(vec3(9., gl_FragCoord.x * .07, 0.));
-  float threshold = resolution.y * (.3 * skyline1 + .02 * skyline2
-  );
+  float skyline2 = (1. - skyline1) * fbm(vec3(9., gl_FragCoord.x * .1, 0.));
+  float threshold = resolution.y * (.2 * skyline1 + .015 * skyline2);
   color *= smoothstep(threshold, threshold + 5., gl_FragCoord.y);
 
   gl_FragColor = vec4(color, 1.);
