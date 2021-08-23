@@ -109,27 +109,27 @@ void main(void) {
   color = softlight(color, noise);
 
   // step3 light
-  float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .4, -.3 * resolution.y));
-  float lightPos = max(0., 1. - lightGradLen / (1.3 * resolution.y));
+  float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .4, 0.));
+  float lightPos = max(0., 1. - lightGradLen / resolution.y);
   vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
-  color += light * .4;
+  color += light * .3;
 
   // step4 small stars
   float starValue1 = 1. - length(cellular2x2(gl_FragCoord.xy /4.));
   starValue1 = min(1., pow(starValue1 * 1.4, 10.));
-  color += (.2 + .6 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue1;
+  color += (.2 + .4 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue1;
   // color = vec3(1.) * starValue1;
 
   // step5 large stars
   float starValue2 = 1. - length(cellular2x2(gl_FragCoord.xy /20.));
   starValue2 = min(1., pow(starValue2 * 1.3, 50.));
-  color += (2. * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue2;
+  color += (.3 + .6 * random(floor(gl_FragCoord.xy / 10.) + time)) * vec3(.9, .9, 1.) * starValue2;
   // color = vec3(1.) * starValue2;
 
   // step6 skyline
   float skyline1 = fbm(vec3(1900., gl_FragCoord.x * .002, 0.));
   float skyline2 = (1. - skyline1) * fbm(vec3(9., gl_FragCoord.x * .1, 0.));
-  float threshold = resolution.y * (.2 * skyline1 + .015 * skyline2);
+  float threshold = resolution.y * (.3 * skyline1 + .015 * skyline2);
   color *= smoothstep(threshold, threshold + 5., gl_FragCoord.y);
 
   gl_FragColor = vec4(color, 1.);
