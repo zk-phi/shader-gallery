@@ -123,7 +123,7 @@ void main(void) {
   // step5 large stars
   float starValue2 = 1. - length(cellular2x2(gl_FragCoord.xy /20.));
   starValue2 = min(1., pow(starValue2 * 1.3, 50.));
-  color += (.3 + .6 * random(floor(gl_FragCoord.xy / 10.) + time)) * vec3(.9, .9, 1.) * starValue2;
+  color += (.5 + .5 * random(floor(gl_FragCoord.xy / 10.) + time)) * vec3(.9, .9, 1.) * starValue2;
   // color = vec3(1.) * starValue2;
 
   // step6 skyline
