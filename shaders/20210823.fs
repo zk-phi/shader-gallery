@@ -98,7 +98,7 @@ void main(void) {
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), gl_FragCoord.y / resolution.y);
 
   // step2 cloud
-  color += fbm(vec3(gl_FragCoord.x + time * 15., gl_FragCoord.y, 0.) / 100.) * .2;
+  color += fbm(vec3(gl_FragCoord.x + time * 15., gl_FragCoord.y, 0.) / 100.) * .25;
 
   // step3 light
   float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .3, 0.));
@@ -108,13 +108,13 @@ void main(void) {
   // step4 small stars
   float starValue1 = 1. - length(cellular2x2(gl_FragCoord.xy /4.));
   starValue1 = min(1., pow(starValue1 * 1.4, 10.));
-  color += (.2 + .5 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue1;
+  color += (.2 + .6 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue1;
   // color = vec3(1.) * starValue1;
 
   // step5 small stars
   float starValue2 = 1. - length(cellular2x2(gl_FragCoord.xy /20.));
   starValue2 = min(1., pow(starValue2 * 1.3, 50.));
-  color += (1.2 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue2;
+  color += (1.5 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue2;
   // color = vec3(1.) * starValue2;
 
   // step6 skyline
