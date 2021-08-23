@@ -3,6 +3,7 @@
 ビルドは不要だけど、
 
 ```
+git submodule update --init
 npm install
 npm run start
 ```
