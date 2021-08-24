@@ -79,22 +79,22 @@ void main(void) {
   // bg
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), uv.y);
 
-  vec3 starColor = vec3(.6, .7, 1.);
-
   // bg noise
   vec3 noise = vec3(fbm(vec3(coord.x + 10. * time, coord.y, 0.) / 100.));
   color = softlight(color, noise * .7);
 
   // light
-  float lightGradLen = length(coord - vec2(resolution.x * .4, 0.));
-  float lightPos = pow(max(0., 1. - lightGradLen / resolution.y), 1.2);
+  float lightGradLen = length(uv - vec2(.4, 0.));
+  float lightPos = pow(max(0., 1. - lightGradLen / .9), 1.3);
   vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
   color += light * .5;
 
+  vec3 starColor = vec3(.6, .7, 1.);
+
   // stars glow
   float localStarDensity = min(.9999, fbm(vec3(coord / 300., 17.)) * 1.8);
-  color = mix(color, starColor, 0.2 * (1. - localStarDensity));
-  // color = vec3(1.) * localStarDensity;
+  color = mix(color, starColor, 0.4 * pow(1. - localStarDensity, 1.5));
+  // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
   // small stars
   // +---+---+---+
@@ -104,10 +104,10 @@ void main(void) {
   // +---+---+---+
   // |   |0.4|   |
   // +---+---+---+
-  float smallStarDensity = .7 + .295 * localStarDensity;
-  float starValue1 = star((uv + vec2(0.0 * dx, 0.0 * dy)), smallStarDensity, .3, .45);
-  starValue1 += .4 * star((uv + vec2(0.0 * dx, 1.0 * dy)), smallStarDensity, .3, .45);
-  starValue1 += .4 * star((uv + vec2(1.0 * dx, 0.0 * dy)), smallStarDensity, .3, .45);
+  float smallStarDensity = .9 + .095 * localStarDensity;
+  float starValue1 = star((uv + vec2(0.0 * dx, 0.0 * dy)), smallStarDensity, .5, .5);
+  starValue1 += .4 * star((uv + vec2(0.0 * dx, 1.0 * dy)), smallStarDensity, .5, .5);
+  starValue1 += .4 * star((uv + vec2(1.0 * dx, 0.0 * dy)), smallStarDensity, .5, .5);
   color = mix(color, starColor, starValue1);
   // color = vec3(1.) * starValue1;
 
@@ -124,19 +124,19 @@ void main(void) {
   // |   |   |0.3|   |   |
   // +---+---+---+---+---+
   float largeStarDensity = .99 + .009 * localStarDensity;
-  float starValue2 = star((uv + vec2( 0.0 * dx,  0.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += 1. * star((uv + vec2(-1.0 * dx,  0.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += 1. * star((uv + vec2( 0.0 * dx, -1.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += 1. * star((uv + vec2( 0.0 * dx,  1.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += 1. * star((uv + vec2( 1.0 * dx,  0.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .6 * star((uv + vec2(-1.0 * dx, -1.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .6 * star((uv + vec2(-1.0 * dx,  1.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .6 * star((uv + vec2( 1.0 * dx, -1.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .6 * star((uv + vec2( 1.0 * dx,  1.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .3 * star((uv + vec2(-2.0 * dx,  0.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .3 * star((uv + vec2( 0.0 * dx, -2.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .3 * star((uv + vec2( 0.0 * dx,  2.0 * dy)), largeStarDensity, .5, .75);
-  starValue2 += .3 * star((uv + vec2( 2.0 * dx,  0.0 * dy)), largeStarDensity, .5, .75);
+  float starValue2 = star((uv + vec2( 0.0 * dx,  0.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += 1. * star((uv + vec2(-1.0 * dx,  0.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += 1. * star((uv + vec2( 0.0 * dx, -1.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += 1. * star((uv + vec2( 0.0 * dx,  1.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += 1. * star((uv + vec2( 1.0 * dx,  0.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .6 * star((uv + vec2(-1.0 * dx, -1.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .6 * star((uv + vec2(-1.0 * dx,  1.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .6 * star((uv + vec2( 1.0 * dx, -1.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .6 * star((uv + vec2( 1.0 * dx,  1.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .3 * star((uv + vec2(-2.0 * dx,  0.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .3 * star((uv + vec2( 0.0 * dx, -2.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .3 * star((uv + vec2( 0.0 * dx,  2.0 * dy)), largeStarDensity, .6, .6);
+  starValue2 += .3 * star((uv + vec2( 2.0 * dx,  0.0 * dy)), largeStarDensity, .6, .6);
   color = mix(color, starColor, starValue2);
   // color = vec3(1.) * starValue2;
 
