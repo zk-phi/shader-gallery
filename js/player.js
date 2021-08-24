@@ -1,4 +1,5 @@
-const QUALITY_FACTOR = 1;
+const match = location.href.match(/\?quality=([0-9.]+)/);
+const QUALITY_FACTOR = match ? parseFloat(match[1]) : 1;
 
 const log = document.getElementById("log");
 const canvas = document.getElementById("canvas");
@@ -81,15 +82,17 @@ gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0 ,0);
 
 const resolutionLoc = gl.getUniformLocation(program, 'resolution');
 const mouseLoc = gl.getUniformLocation(program, 'mouse');
+const qualityLoc = gl.getUniformLocation(program, 'quality');
 const timeLoc = gl.getUniformLocation(program, 'time');
 
 const startTime = new Date().getTime();
 
 const updateResolution = () => {
-  canvas.height = window.innerHeight * QUALITY_FACTOR;
-  canvas.width = window.innerWidth * QUALITY_FACTOR;
+  canvas.height = window.innerHeight * devicePixelRatio * QUALITY_FACTOR;
+  canvas.width = window.innerWidth * devicePixelRatio * QUALITY_FACTOR;
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
+  gl.uniform1f(qualityLoc, devicePixelRatio * QUALITY_FACTOR);
 };
 window.addEventListener('resize', updateResolution);
 updateResolution();
