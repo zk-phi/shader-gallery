@@ -10,48 +10,12 @@ float random(vec2 st) {
   return fract(sin(dot(st.xy,vec2(12.9898,78.233))) * 43758.5453123);
 }
 
-float mod289(float x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec2 mod289(vec2 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
 vec4 mod289(vec4 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-vec4 mod7(vec4 x) {
-  return x - floor(x * (1.0 / 7.0)) * 7.0;
-}
-
 vec4 permute(vec4 x) {
   return mod289((34.0 * x + 10.0) * x);
-}
-
-// taken from webgl-noise (https://github.com/ashima/webgl-noise)
-vec2 cellular2x2(vec2 P) {
- #define K 0.142857142857 // 1/7
- #define K2 0.0714285714285 // K/2
- #define jitter 0.8 // jitter 1.0 makes F1 wrong more often
-  vec2 Pi = mod289(floor(P));
-  vec2 Pf = fract(P);
-  vec4 Pfx = Pf.x + vec4(-0.5, -1.5, -0.5, -1.5);
-  vec4 Pfy = Pf.y + vec4(-0.5, -0.5, -1.5, -1.5);
-  vec4 p = permute(Pi.x + vec4(0.0, 1.0, 0.0, 1.0));
-  p = permute(p + Pi.y + vec4(0.0, 0.0, 1.0, 1.0));
-  vec4 ox = mod7(p)*K+K2;
-  vec4 oy = mod7(floor(p*K))*K+K2;
-  vec4 dx = Pfx + jitter*ox;
-  vec4 dy = Pfy + jitter*oy;
-  vec4 d = dx * dx + dy * dy; // d11, d12, d21 and d22, squared
-  d.xy = (d.x < d.y) ? d.xy : d.yx; // Swap if smaller
-  d.xz = (d.x < d.z) ? d.xz : d.zx;
-  d.xw = (d.x < d.w) ? d.xw : d.wx;
-  d.y = min(d.y, d.z);
-  d.y = min(d.y, d.w);
-  return sqrt(d.xy);
 }
 
 // taken from glsl-fbm (https://github.com/yiwenl/glsl-fbm)
@@ -98,6 +62,10 @@ vec3 softlight(vec3 base, vec3 ref) {
   return (1. - flag) * res1 + flag * res2;
 }
 
+float star(vec2 fragCoord, float density) {
+  return smoothstep(density, 1., random(fragCoord / resolution.xy));
+}
+
 void main(void) {
   vec2 d = resolution.xy / (gl_FragCoord.xy + 1.);
 
@@ -110,20 +78,55 @@ void main(void) {
 
   // step3 light
   float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .4, 0.));
-  float lightPos = max(0., 1. - lightGradLen / resolution.y);
+  float lightPos = max(0., 1. - lightGradLen / (resolution.y * .5));
   vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
   color += light * .3;
 
+  float localStarDensity = min(.9999, fbm(vec3(gl_FragCoord.xy / 300., 950.)) * 1.8);
+  // color = vec3(1.) * localStarDensity;
+
   // step4 small stars
-  float starValue1 = 1. - length(cellular2x2(gl_FragCoord.xy /4.));
-  starValue1 = min(1., pow(starValue1 * 1.4, 10.));
-  color += (.2 + .4 * random(gl_FragCoord.xy + time)) * vec3(.9, .9, 1.) * starValue1;
+  // +---+---+---+
+  // |   |   |   |
+  // +---+---+---+
+  // |   | 1 |0.2|
+  // +---+---+---+
+  // |   |0.2|   |
+  // +---+---+---+
+  float smallStarDensity = .67 + .3 * localStarDensity;
+  float starValue1 = star(gl_FragCoord.xy, smallStarDensity);
+  starValue1 += .2 * star((gl_FragCoord.xy + vec2(0.0, 1.0)), smallStarDensity);
+  starValue1 += .2 * star((gl_FragCoord.xy + vec2(1.0, 0.0)), smallStarDensity);
+  color += (.3 + .3 * random(gl_FragCoord.xy + time)) * vec3(.8, .8, 1.) * starValue1;
   // color = vec3(1.) * starValue1;
 
-  // step5 large stars
-  float starValue2 = 1. - length(cellular2x2(gl_FragCoord.xy /20.));
-  starValue2 = min(1., pow(starValue2 * 1.3, 50.));
-  color += (.5 + .5 * random(floor(gl_FragCoord.xy / 10.) + time)) * vec3(.9, .9, 1.) * starValue2;
+  // // step4 large stars
+  // +---+---+---+---+---+
+  // |   |   |0.2|   |   |
+  // +---+---+---+---+---+
+  // |   |0.4|0.8|0.4|   |
+  // +---+---+---+---+---+
+  // |0.2|0.8| 1 |0.8|0.2|
+  // +---+---+---+---+---+
+  // |   |0.4|0.8|0.4|   |
+  // +---+---+---+---+---+
+  // |   |   |0.2|   |   |
+  // +---+---+---+---+---+
+  float largeStarDensity = min(.9999, .99 + .01 * localStarDensity);
+  float starValue2 = star(gl_FragCoord.xy, largeStarDensity);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(-1., 0.0)), largeStarDensity);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(0.0, -1.)), largeStarDensity);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(0.0, 1.0)), largeStarDensity);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(1.0, 0.0)), largeStarDensity);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(-1., -1.)), largeStarDensity);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(-1., 1.0)), largeStarDensity);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(1.0, -1.)), largeStarDensity);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(1.0, 1.0)), largeStarDensity);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(-2., 0.0)), largeStarDensity);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(0.0, -2.)), largeStarDensity);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(0.0, 2.0)), largeStarDensity);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(2.0, 0.0)), largeStarDensity);
+  color += (.5 + .5 * random(gl_FragCoord.xy + time)) * vec3(.8, .8, 1.) * starValue2;
   // color = vec3(1.) * starValue2;
 
   // step6 skyline
