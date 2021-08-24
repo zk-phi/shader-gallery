@@ -124,7 +124,7 @@ void main(void) {
   // color = vec3(1.) * starValue2;
 
   // bg noise
-  vec3 noise = vec3(fbm(vec3(gl_FragCoord.x + 10. * time, gl_FragCoord.y, 0.) / 100.) * .9);
+  vec3 noise = vec3(fbm(vec3(gl_FragCoord.x + 10. * time, gl_FragCoord.y, 0.) / 100.));
   color = softlight(color, noise);
 
   // light
