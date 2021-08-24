@@ -62,45 +62,41 @@ vec3 softlight(vec3 base, vec3 ref) {
   return (1. - flag) * res1 + flag * res2;
 }
 
-float star(vec2 fragCoord, float density) {
-  return smoothstep(density, 1., random(fragCoord / resolution.xy));
+float star(vec2 fragCoord, float density, float brightness, float matatakiFactor) {
+  float rand = random(fragCoord / resolution.xy);
+  float matataki = random(vec2((1000. * rand + time) / 100., 0.));
+  return (brightness + matatakiFactor * matataki) * smoothstep(density, 1., rand);
 }
 
 void main(void) {
   vec2 d = resolution.xy / (gl_FragCoord.xy + 1.);
 
-  // step1 bg
+  // bg
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), gl_FragCoord.y / resolution.y);
 
-  // step2 bg noise
-  vec3 noise = vec3(fbm(vec3(gl_FragCoord.x + 10. * time, gl_FragCoord.y, 0.) / 100.));
-  color = softlight(color, noise);
+  vec3 starColor = vec3(.7, .8, 1.);
 
-  // step3 light
-  float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .4, 0.));
-  float lightPos = max(0., 1. - lightGradLen / (resolution.y * .5));
-  vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
-  color += light * .3;
-
-  float localStarDensity = min(.9999, fbm(vec3(gl_FragCoord.xy / 300., 950.)) * 1.8);
+  // stars glow
+  float localStarDensity = min(.9999, fbm(vec3(gl_FragCoord.xy / 300., 17.)) * 1.8);
+  color = mix(color, starColor, 0.25 * (1. - localStarDensity));
   // color = vec3(1.) * localStarDensity;
 
-  // step4 small stars
+  // small stars
   // +---+---+---+
   // |   |   |   |
   // +---+---+---+
-  // |   | 1 |0.2|
+  // |   | 1 |0.4|
   // +---+---+---+
-  // |   |0.2|   |
+  // |   |0.4|   |
   // +---+---+---+
-  float smallStarDensity = .67 + .3 * localStarDensity;
-  float starValue1 = star(gl_FragCoord.xy, smallStarDensity);
-  starValue1 += .2 * star((gl_FragCoord.xy + vec2(0.0, 1.0)), smallStarDensity);
-  starValue1 += .2 * star((gl_FragCoord.xy + vec2(1.0, 0.0)), smallStarDensity);
-  color += (.3 + .3 * random(gl_FragCoord.xy + time)) * vec3(.8, .8, 1.) * starValue1;
+  float smallStarDensity = .7 + .28 * localStarDensity;
+  float starValue1 = star(gl_FragCoord.xy, smallStarDensity, .4, .2);
+  starValue1 += .4 * star((gl_FragCoord.xy + vec2(0.0, 1.0)), smallStarDensity, .4, .2);
+  starValue1 += .4 * star((gl_FragCoord.xy + vec2(1.0, 0.0)), smallStarDensity, .4, .2);
+  color = mix(color, starColor, starValue1);
   // color = vec3(1.) * starValue1;
 
-  // // step4 large stars
+  // // large stars
   // +---+---+---+---+---+
   // |   |   |0.2|   |   |
   // +---+---+---+---+---+
@@ -113,23 +109,33 @@ void main(void) {
   // |   |   |0.2|   |   |
   // +---+---+---+---+---+
   float largeStarDensity = min(.9999, .99 + .01 * localStarDensity);
-  float starValue2 = star(gl_FragCoord.xy, largeStarDensity);
-  starValue2 += .8 * star((gl_FragCoord.xy + vec2(-1., 0.0)), largeStarDensity);
-  starValue2 += .8 * star((gl_FragCoord.xy + vec2(0.0, -1.)), largeStarDensity);
-  starValue2 += .8 * star((gl_FragCoord.xy + vec2(0.0, 1.0)), largeStarDensity);
-  starValue2 += .8 * star((gl_FragCoord.xy + vec2(1.0, 0.0)), largeStarDensity);
-  starValue2 += .4 * star((gl_FragCoord.xy + vec2(-1., -1.)), largeStarDensity);
-  starValue2 += .4 * star((gl_FragCoord.xy + vec2(-1., 1.0)), largeStarDensity);
-  starValue2 += .4 * star((gl_FragCoord.xy + vec2(1.0, -1.)), largeStarDensity);
-  starValue2 += .4 * star((gl_FragCoord.xy + vec2(1.0, 1.0)), largeStarDensity);
-  starValue2 += .2 * star((gl_FragCoord.xy + vec2(-2., 0.0)), largeStarDensity);
-  starValue2 += .2 * star((gl_FragCoord.xy + vec2(0.0, -2.)), largeStarDensity);
-  starValue2 += .2 * star((gl_FragCoord.xy + vec2(0.0, 2.0)), largeStarDensity);
-  starValue2 += .2 * star((gl_FragCoord.xy + vec2(2.0, 0.0)), largeStarDensity);
-  color += (.5 + .5 * random(gl_FragCoord.xy + time)) * vec3(.8, .8, 1.) * starValue2;
+  float starValue2 = star(gl_FragCoord.xy, largeStarDensity, .5, .5);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(-1., 0.0)), largeStarDensity, .5, .5);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(0.0, -1.)), largeStarDensity, .5, .5);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(0.0, 1.0)), largeStarDensity, .5, .5);
+  starValue2 += .8 * star((gl_FragCoord.xy + vec2(1.0, 0.0)), largeStarDensity, .5, .5);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(-1., -1.)), largeStarDensity, .5, .5);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(-1., 1.0)), largeStarDensity, .5, .5);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(1.0, -1.)), largeStarDensity, .5, .5);
+  starValue2 += .4 * star((gl_FragCoord.xy + vec2(1.0, 1.0)), largeStarDensity, .5, .5);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(-2., 0.0)), largeStarDensity, .5, .5);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(0.0, -2.)), largeStarDensity, .5, .5);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(0.0, 2.0)), largeStarDensity, .5, .5);
+  starValue2 += .2 * star((gl_FragCoord.xy + vec2(2.0, 0.0)), largeStarDensity, .5, .5);
+  color = mix(color, starColor, starValue2);
   // color = vec3(1.) * starValue2;
 
-  // step6 skyline
+  // bg noise
+  vec3 noise = vec3(fbm(vec3(gl_FragCoord.x + 10. * time, gl_FragCoord.y, 0.) / 100.) * .9);
+  color = softlight(color, noise);
+
+  // light
+  float lightGradLen = length(gl_FragCoord.xy - vec2(resolution.x * .4, 0.));
+  float lightPos = max(0., 1. - lightGradLen / (resolution.y * .5));
+  vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
+  color += light * .2;
+
+  // skyline
   float skyline1 = fbm(vec3(1900., gl_FragCoord.x * .002, 0.));
   float skyline2 = (1. - skyline1) * fbm(vec3(9., gl_FragCoord.x * .1, 0.));
   float threshold = resolution.y * (.3 * skyline1 + .015 * skyline2);
