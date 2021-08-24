@@ -69,8 +69,6 @@ float star(vec2 fragCoord, float density, float brightness, float matatakiFactor
 }
 
 void main(void) {
-  vec2 d = resolution.xy / (gl_FragCoord.xy + 1.);
-
   // bg
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), gl_FragCoord.y / resolution.y);
 
