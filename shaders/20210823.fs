@@ -54,6 +54,40 @@ float fbm(vec3 x) {
   return v;
 }
 
+// ---- voronoi
+
+// taken and modified from the book of shaders
+
+vec2 random2(vec2 p) {
+  return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
+}
+
+// returns vec3(center.x, center.y, distance)
+vec3 voronoi(vec2 pos) {
+  vec2 grid = floor(pos);
+  vec2 relativePos = fract(pos);
+
+  float dist = 10.;
+  vec2 center;
+
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 neighbor = vec2(float(i), float(j));
+      vec2 point = random2(grid + neighbor);
+      point = 0.5 + 0.5 * sin(6.2831 * point);
+      vec2 diff = neighbor + point - relativePos;
+      float d = length(diff);
+
+      if(d < dist) {
+        dist = d;
+        center = point;
+      }
+    }
+  }
+
+  return vec3(center, dist);
+}
+
 // ---- main (inspired by https://ae-style.net/tutorials/e06.html)
 
 vec2 rot2d(vec2 pos, float rad) {
@@ -70,17 +104,18 @@ vec3 softlight(vec3 base, vec3 ref) {
   return (1. - flag) * res1 + flag * res2;
 }
 
-float star(vec2 uv, float density, float brightness, float matatakiFactor) {
-  float rand = random(uv);
-  float matataki = random(vec2((1000. * rand + time) / 100., 0.));
-  return (brightness + matatakiFactor * matataki) * smoothstep(density, 1., rand);
+float star(vec2 uv, float scale, float radius, float threshold, float brightness, float matatakiFactor) {
+  vec3 voronoi = 1. - voronoi(uv * scale);
+  float flag = pow(smoothstep(radius, 1., voronoi.z), 2.) * smoothstep(threshold, 1., random(voronoi.xy));
+  float matataki = random(voronoi.xy + time * .001);
+  return flag * (brightness + matataki * matatakiFactor);
 }
 
 void main(void) {
   vec2 rotCenter = vec2(resolution.x * .3, resolution.y * .6);
-  vec2 starCoord = floor((rot2d(gl_FragCoord.xy - rotCenter, - time * .0025) + rotCenter) / quality);
-  vec2 coord = floor(gl_FragCoord.xy / quality);
-  vec2 resolution = floor(resolution / quality);
+  vec2 starCoord = (rot2d(gl_FragCoord.xy - rotCenter, - time * .0025) + rotCenter) / quality;
+  vec2 coord = gl_FragCoord.xy / quality;
+  vec2 resolution = resolution / quality;
   vec2 uv = coord / resolution;
   vec2 starUv = starCoord / resolution;
   float dx = 1. / resolution.x;
@@ -107,50 +142,16 @@ void main(void) {
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
   // small stars
-  // +---+---+---+
-  // |   |0.6|   |
-  // +---+---+---+
-  // |0.6| 1 |0.6|
-  // +---+---+---+
-  // |   |0.6|   |
-  // +---+---+---+
-  float smallStarDensity = .9 + .08 * localStarDensity;
-  float starValue1 = star((starUv + vec2(0.0 * dx, 0.0 * dy)), smallStarDensity, .3, .3);
-  starValue1 += .6 * star((starUv + vec2(0.0 * dx, -1. * dy)), smallStarDensity, .3, .3);
-  starValue1 += .6 * star((starUv + vec2(-1. * dx, 0.0 * dy)), smallStarDensity, .3, .3);
-  starValue1 += .6 * star((starUv + vec2(0.0 * dx, 1.0 * dy)), smallStarDensity, .3, .3);
-  starValue1 += .6 * star((starUv + vec2(1.0 * dx, 0.0 * dy)), smallStarDensity, .3, .3);
+  float smallStarDensity = .0 + .9 * localStarDensity;
+  float starValue1 = star(starUv, 440., .35, smallStarDensity, .7, .3);
   color = mix(color, starColor, starValue1);
-  // color = vec3(1.) * starValue1;
+  // color = vec3(starValue1);
 
-  // // large stars
-  // +---+---+---+---+---+
-  // |   |   |0.3|   |   |
-  // +---+---+---+---+---+
-  // |   |0.6| 1 |0.6|   |
-  // +---+---+---+---+---+
-  // |0.3| 1 | 1 | 1 |0.3|
-  // +---+---+---+---+---+
-  // |   |0.6| 1 |0.6|   |
-  // +---+---+---+---+---+
-  // |   |   |0.3|   |   |
-  // +---+---+---+---+---+
-  float largeStarDensity = .99 + .008 * localStarDensity;
-  float starValue2 = star((starUv + vec2( 0.0 * dx,  0.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += 1. * star((starUv + vec2(-1.0 * dx,  0.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += 1. * star((starUv + vec2( 0.0 * dx, -1.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += 1. * star((starUv + vec2( 0.0 * dx,  1.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += 1. * star((starUv + vec2( 1.0 * dx,  0.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .6 * star((starUv + vec2(-1.0 * dx, -1.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .6 * star((starUv + vec2(-1.0 * dx,  1.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .6 * star((starUv + vec2( 1.0 * dx, -1.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .6 * star((starUv + vec2( 1.0 * dx,  1.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .3 * star((starUv + vec2(-2.0 * dx,  0.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .3 * star((starUv + vec2( 0.0 * dx, -2.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .3 * star((starUv + vec2( 0.0 * dx,  2.0 * dy)), largeStarDensity, .5, .5);
-  starValue2 += .3 * star((starUv + vec2( 2.0 * dx,  0.0 * dy)), largeStarDensity, .5, .5);
+  // large stars
+  float largeStarDensity = .0 + .95 * localStarDensity;
+  float starValue2 = star(starUv, 100., .7, largeStarDensity, .7, .7);
   color = mix(color, starColor, starValue2);
-  // color = vec3(1.) * starValue2;
+  // color = vec3(starValue2);
 
   // skyline
   float skyline1 = fbm(vec3(1900., coord.x * .002, 0.));
