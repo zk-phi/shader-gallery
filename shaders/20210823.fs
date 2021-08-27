@@ -63,9 +63,9 @@ vec2 random2(vec2 p) {
 }
 
 // returns vec3(center.x, center.y, distance)
-vec3 voronoi(vec2 pos) {
-  vec2 grid = floor(pos);
-  vec2 relativePos = fract(pos);
+vec3 voronoi(vec2 pos, float gridSize) {
+  vec2 cellOrigin = floor(pos / gridSize);
+  vec2 cellPos = fract(pos / gridSize);
 
   float dist = 10.;
   vec2 center;
@@ -73,19 +73,18 @@ vec3 voronoi(vec2 pos) {
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
       vec2 neighbor = vec2(float(i), float(j));
-      vec2 point = random2(grid + neighbor);
-      point = 0.5 + 0.5 * sin(6.2831 * point);
-      vec2 diff = neighbor + point - relativePos;
-      float d = length(diff);
+      vec2 neighborOrigin = cellOrigin + neighbor;
+      vec2 neighborCenter = random2(neighborOrigin);
+      float d = length(neighbor + neighborCenter - cellPos);
 
       if(d < dist) {
         dist = d;
-        center = point;
+        center = neighborOrigin + neighborCenter;
       }
     }
   }
 
-  return vec3(center, dist);
+  return vec3(center, dist) * gridSize;
 }
 
 // ---- main (inspired by https://ae-style.net/tutorials/e06.html)
@@ -104,11 +103,14 @@ vec3 softlight(vec3 base, vec3 ref) {
   return (1. - flag) * res1 + flag * res2;
 }
 
-float star(vec2 pos, float scale, float radius, float threshold, float brightness, float matatakiFactor) {
-  vec3 voronoi = 1. - voronoi(pos * scale);
-  float flag = pow(smoothstep(radius, 1., voronoi.z), 2.) * smoothstep(threshold, 1., random(voronoi.xy));
-  float matataki = random(voronoi.xy + time * .001);
-  return flag * (brightness + matataki * matatakiFactor);
+float star(vec2 pos, float gridSize, float radius, float growRadius, float threshold, float minBrightness, float randomFactor, float matatakiFactor) {
+  vec3 voronoi = voronoi(pos, gridSize);
+  float star = 1. - smoothstep(0., radius, voronoi.z);
+  float glow = 1. - smoothstep(0., growRadius, voronoi.z);
+  float flag = step(threshold, random(voronoi.xy / resolution));
+  float matataki = matatakiFactor * random(voronoi.xy + time * .001);
+  float random = randomFactor * random(voronoi.xy);
+  return flag * (minBrightness + random + matataki) * (star + .1 * glow);
 }
 
 void main(void) {
@@ -137,18 +139,18 @@ void main(void) {
 
   // stars glow
   float localStarDensity = min(.9999, fbm(vec3(starCoord / 300., 17.)) * 1.8);
-  color = mix(color, starColor, 0.3 * pow(1. - localStarDensity, 1.5));
+  color = mix(color, starColor, .25 * pow(1. - localStarDensity, 1.5));
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
   // small stars
-  float smallStarDensity = .0 + .95 * localStarDensity;
-  float starValue1 = star(starCoord, .25, .35, smallStarDensity, .5, .3);
+  float smallStarDensity = .9 * localStarDensity;
+  float starValue1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, 1., .3);
   color = mix(color, starColor, starValue1);
   // color = vec3(starValue1);
 
   // large stars
-  float largeStarDensity = .0 + .9 * localStarDensity;
-  float starValue2 = star(starCoord, .08, .7, largeStarDensity, .5, .5);
+  float largeStarDensity = .9 * localStarDensity;
+  float starValue2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .0, 1., .3);
   color = mix(color, starColor, starValue2);
   // color = vec3(starValue2);
 
