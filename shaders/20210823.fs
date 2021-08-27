@@ -150,7 +150,7 @@ void main(void) {
 
   // large stars
   float largeStarDensity = .9 * localStarDensity;
-  float starValue2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .0, 1., .3);
+  float starValue2 = star(starCoord, 25., 2., 6., largeStarDensity, .5, .5, .3);
   color = mix(color, starColor, starValue2);
   // color = vec3(starValue2);
 
