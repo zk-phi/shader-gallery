@@ -125,7 +125,7 @@ void main(void) {
 
   // bg noise
   vec3 noise = vec3(fbm(vec3(coord.x + 10. * time, coord.y, 0.) / 100.));
-  color = softlight(color, noise * .8);
+  color = softlight(color, noise * .5);
 
   // light
   float lightGradLen = length(uv - vec2(.4, 0.));
@@ -137,18 +137,18 @@ void main(void) {
 
   // stars glow
   float localStarDensity = min(.9999, fbm(vec3(starCoord / 300., 17.)) * 1.8);
-  color = mix(color, starColor, 0.4 * pow(1. - localStarDensity, 1.5));
+  color = mix(color, starColor, 0.3 * pow(1. - localStarDensity, 1.5));
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
   // small stars
   float smallStarDensity = .0 + .95 * localStarDensity;
-  float starValue1 = star(starCoord, .25, .35, smallStarDensity, .7, .3);
+  float starValue1 = star(starCoord, .25, .35, smallStarDensity, .5, .3);
   color = mix(color, starColor, starValue1);
   // color = vec3(starValue1);
 
   // large stars
   float largeStarDensity = .0 + .9 * localStarDensity;
-  float starValue2 = star(starCoord, .08, .7, largeStarDensity, .7, .7);
+  float starValue2 = star(starCoord, .08, .7, largeStarDensity, .5, .5);
   color = mix(color, starColor, starValue2);
   // color = vec3(starValue2);
 
