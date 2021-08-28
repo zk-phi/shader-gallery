@@ -5,7 +5,7 @@ uniform float quality;
 
 // ---- noise
 
-#define NUM_OCTAVES 6
+#define NUM_OCTAVES 3
 
 float random(vec2 st) {
   return fract(sin(dot(st.xy,vec2(12.9898,78.233))) * 43758.5453123);
@@ -157,7 +157,7 @@ void main(void) {
   // skyline
   float skyline1 = fbm(vec3(1900., coord.x * .002, 0.));
   float skyline2 = (1. - skyline1) * fbm(vec3(9., coord.x * .1, 0.));
-  float threshold = resolution.y * (.3 * skyline1 + .015 * skyline2);
+  float threshold = resolution.y * (.3 * skyline1 + .02 * skyline2);
   color *= smoothstep(threshold, threshold + 5., coord.y);
 
   gl_FragColor = vec4(color, 1.);
