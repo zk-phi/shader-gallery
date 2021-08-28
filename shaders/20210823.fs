@@ -88,10 +88,10 @@ vec2 rot2d(vec2 pos, float rad) {
 }
 
 vec3 softlight(vec3 base, vec3 ref) {
-  vec3 flag = step(vec3(.5, .5, .5), ref);
+  vec3 flag = step(vec3(.5), ref);
   vec3 res1 = 2. * base * ref + base * base * (1. - 2. * ref);
   vec3 res2 = 2. * base * (1. - ref) + sqrt(base) * (2. * ref - 1.);
-  return (1. - flag) * res1 + flag * res2;
+  return mix(res1, res2, flag);
 }
 
 float star(vec2 pos, float gridSize, float radius, float growRadius, float threshold, float minBrightness, float randomFactor, float matatakiFactor) {
@@ -127,7 +127,7 @@ void main(void) {
   vec3 starColor = vec3(.6, .7, 1.);
 
   // stars glow
-  float localStarDensity = min(.9999, fractal(starCoord * .005) * 1.8);
+  float localStarDensity = min(1., fractal(starCoord * .005) * 1.8);
   color = mix(color, starColor, .2 * pow(1. - localStarDensity, 2.));
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
