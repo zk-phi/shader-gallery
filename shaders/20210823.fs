@@ -42,23 +42,38 @@ vec2 random2(vec2 p) {
   );
 }
 
-// simple voronoi (2x2 version)
+// simple 2x2 voronoi
 // returns vec3(center.x, center.y, distance)
 vec3 voronoi(vec2 pos, float gridSize) {
-  vec2 cellOrigin = floor(pos / gridSize + .5);
-  vec2 cellPos = pos / gridSize - cellOrigin;
+  vec2 scaledPos = pos / gridSize;
+  vec2 cellOrigin = floor(scaledPos + .5); // round
+  vec2 cellPos = scaledPos - cellOrigin;
 
-  vec3 ret = vec3(0., 0., 10.);
+  // +-----+-----+
+  // |-1,-1| 0,-1|
+  // +-----+-----+
+  // |-1 ,0| 0, 0|
+  // +-----+-----+
 
-  for (int j = -1; j <= 0; j++) {
-    for (int i = -1; i <= 0; i++) {
-      vec2 neighbor = vec2(float(i), float(j));
-      vec2 neighborOrigin = cellOrigin + neighbor;
-      vec2 neighborCenter = random2(neighborOrigin);
-      float d = length(neighbor + neighborCenter - cellPos);
-      ret = mix(ret, vec3(neighborOrigin + neighborCenter, d), step(d, ret.z));
-    }
-  }
+  vec2 cell1 = cellOrigin + vec2(-1., -1.);
+  vec2 p1 = cell1 + random2(cell1);
+  float d1 = length(p1 - scaledPos);
+  vec3 ret = vec3(p1, d1);
+
+  vec2 cell2 = cellOrigin + vec2(0., -1.);
+  vec2 p2 = cell2 + random2(cell2);
+  float d2 = length(p2 - scaledPos);
+  ret = mix(ret, vec3(p2, d2), step(d2, ret.z));
+
+  vec2 cell3 = cellOrigin + vec2(-1., 0.);
+  vec2 p3 = cell3 + random2(cell3);
+  float d3 = length(p3 - scaledPos);
+  ret = mix(ret, vec3(p3, d3), step(d3, ret.z));
+
+  vec2 cell4 = cellOrigin + vec2(0., 0.);
+  vec2 p4 = cell4 + random2(cell4);
+  float d4 = length(p4 - scaledPos);
+  ret = mix(ret, vec3(p4, d4), step(d4, ret.z));
 
   return ret * gridSize;
 }
