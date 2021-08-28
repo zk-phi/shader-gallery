@@ -5,63 +5,44 @@ uniform float quality;
 
 // ---- noise
 
-#define NUM_OCTAVES 3
-
 float random(vec2 st) {
-  return fract(sin(dot(st.xy,vec2(12.9898,78.233))) * 43758.5453123);
+  return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-vec4 mod289(vec4 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
+// Iq's value noise (https://www.shadertoy.com/view/lsf3WH)
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+
+  vec2 u = f * f * (3.0 - 2.0 * f);
+
+  return mix(
+    mix(random(i + vec2(0.0, 0.0)), random(i + vec2(1.0, 0.0)), u.x),
+    mix(random(i + vec2(0.0, 1.0)), random(i + vec2(1.0, 1.0)), u.x),
+    u.y
+  );
 }
 
-vec4 permute(vec4 x) {
-  return mod289((34.0 * x + 10.0) * x);
-}
-
-// taken from glsl-fbm (https://github.com/yiwenl/glsl-fbm)
-float noise(vec3 p) {
-  vec3 a = floor(p);
-  vec3 d = p - a;
-  d = d * d * (3.0 - 2.0 * d);
-
-  vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
-  vec4 k1 = permute(b.xyxy);
-  vec4 k2 = permute(k1.xyxy + b.zzww);
-
-  vec4 c = k2 + a.zzzz;
-  vec4 k3 = permute(c);
-  vec4 k4 = permute(c + 1.0);
-
-  vec4 o1 = fract(k3 * (1.0 / 41.0));
-  vec4 o2 = fract(k4 * (1.0 / 41.0));
-
-  vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
-  vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
-
-  return o4.y * d.y + o4.x * (1.0 - d.y);
-}
-
-float fbm(vec3 x) {
-  float v = 0.0;
-  float a = 0.5;
-  vec3 shift = vec3(100);
-  for (int i = 0; i < NUM_OCTAVES; ++i) {
-    v += a * noise(x);
-    x = x * 2.0 + shift;
-    a *= 0.5;
-  }
-  return v;
+// fbm (octave = 3)
+float fractal(vec2 uv) {
+  mat2 m = mat2(1.6,  1.2, -1.2,  1.6);
+  float f  = 0.5000 * noise(uv);
+  uv = m * uv;
+  f += 0.2500 * noise(uv);
+  uv = m * uv;
+  f += 0.1250 * noise(uv);
+  return f;
 }
 
 // ---- voronoi
 
-// taken and modified from the book of shaders
-
 vec2 random2(vec2 p) {
-  return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
+  return fract(
+    sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453
+  );
 }
 
+// simple voronoi
 // returns vec3(center.x, center.y, distance)
 vec3 voronoi(vec2 pos, float gridSize) {
   vec2 cellOrigin = floor(pos / gridSize);
@@ -119,14 +100,12 @@ void main(void) {
   vec2 coord = gl_FragCoord.xy / quality;
   vec2 resolution = resolution / quality;
   vec2 uv = coord / resolution;
-  float dx = 1. / resolution.x;
-  float dy = 1. / resolution.y;
 
   // bg
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), uv.y);
 
   // bg noise
-  vec3 noise = vec3(fbm(vec3(coord.x + 10. * time, coord.y, 0.) / 100.));
+  vec3 noise = vec3(fractal(vec2(coord.x + 10. * time, coord.y) / 100.));
   color = softlight(color, noise * .5);
 
   // light
@@ -138,7 +117,7 @@ void main(void) {
   vec3 starColor = vec3(.6, .7, 1.);
 
   // stars glow
-  float localStarDensity = min(.9999, fbm(vec3(starCoord / 300., 17.)) * 1.8);
+  float localStarDensity = min(.9999, fractal(starCoord / 200.) * 1.8);
   color = mix(color, starColor, .25 * pow(1. - localStarDensity, 1.5));
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
@@ -155,9 +134,9 @@ void main(void) {
   // color = vec3(starValue2);
 
   // skyline
-  float skyline1 = fbm(vec3(1900., coord.x * .002, 0.));
-  float skyline2 = (1. - skyline1) * fbm(vec3(9., coord.x * .1, 0.));
-  float threshold = resolution.y * (.3 * skyline1 + .02 * skyline2);
+  float skyline1 = fractal(vec2(coord.x * .003));
+  float skyline2 = (1. - skyline1) * fractal(vec2(coord.x * .1));
+  float threshold = resolution.y * (.1  + .1 * skyline1 + .02 * skyline2);
   color *= smoothstep(threshold, threshold + 5., coord.y);
 
   gl_FragColor = vec4(color, 1.);
