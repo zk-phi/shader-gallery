@@ -42,17 +42,17 @@ vec2 random2(vec2 p) {
   );
 }
 
-// simple voronoi
+// simple voronoi (2x2 version)
 // returns vec3(center.x, center.y, distance)
 vec3 voronoi(vec2 pos, float gridSize) {
-  vec2 cellOrigin = floor(pos / gridSize);
-  vec2 cellPos = fract(pos / gridSize);
+  vec2 cellOrigin = floor(pos / gridSize + .5);
+  vec2 cellPos = pos / gridSize - cellOrigin;
 
   float dist = 10.;
   vec2 center;
 
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
+  for (int j = -1; j <= 0; j++) {
+    for (int i = -1; i <= 0; i++) {
       vec2 neighbor = vec2(float(i), float(j));
       vec2 neighborOrigin = cellOrigin + neighbor;
       vec2 neighborCenter = random2(neighborOrigin);
