@@ -118,7 +118,7 @@ void main(void) {
 
   // stars glow
   float localStarDensity = min(.9999, fractal(starCoord / 200.) * 1.8);
-  color = mix(color, starColor, .2 * pow(1. - localStarDensity, 3.));
+  color = mix(color, starColor, .2 * pow(1. - localStarDensity, 2.));
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
   // small stars
