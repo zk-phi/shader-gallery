@@ -133,13 +133,13 @@ void main(void) {
 
   // small stars
   float smallStarDensity = .9 * localStarDensity;
-  float starValue1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, 1., .3);
+  float starValue1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, 1., .1);
   color = mix(color, starColor, starValue1);
   // color = vec3(starValue1);
 
   // large stars
   float largeStarDensity = .9 * localStarDensity;
-  float starValue2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .3, .5, .5);
+  float starValue2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .2, .5, .4);
   color = mix(color, starColor, starValue2);
   // color = vec3(starValue2);
 
