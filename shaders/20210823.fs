@@ -95,17 +95,17 @@ float star(vec2 pos, float gridSize, float radius, float growRadius, float thres
 }
 
 void main(void) {
-  vec2 rotCenter = vec2(resolution.x * .3, resolution.y * .6);
-  vec2 starCoord = (rot2d(gl_FragCoord.xy - rotCenter, - time * .0025) + rotCenter) / quality;
   vec2 coord = gl_FragCoord.xy / quality;
   vec2 resolution = resolution / quality;
+  vec2 rotCenter = vec2(resolution.x * .3, resolution.y * .6);
+  vec2 starCoord = rot2d(coord - rotCenter, - time * .0025) + rotCenter;
   vec2 uv = coord / resolution;
 
   // bg
   vec3 color = mix(vec3(.0, .05, .19), vec3(0.), uv.y);
 
   // bg noise
-  vec3 noise = vec3(fractal(vec2(coord.x + 10. * time, coord.y) / 100.));
+  vec3 noise = vec3(fractal(vec2(coord.x + 10. * time, coord.y) * .01));
   color = softlight(color, noise * .5);
 
   // light
@@ -117,7 +117,7 @@ void main(void) {
   vec3 starColor = vec3(.6, .7, 1.);
 
   // stars glow
-  float localStarDensity = min(.9999, fractal(starCoord / 200.) * 1.8);
+  float localStarDensity = min(.9999, fractal(starCoord * .005) * 1.8);
   color = mix(color, starColor, .2 * pow(1. - localStarDensity, 2.));
   // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
