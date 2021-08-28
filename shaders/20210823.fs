@@ -48,8 +48,7 @@ vec3 voronoi(vec2 pos, float gridSize) {
   vec2 cellOrigin = floor(pos / gridSize + .5);
   vec2 cellPos = pos / gridSize - cellOrigin;
 
-  float dist = 10.;
-  vec2 center;
+  vec3 ret = vec3(0., 0., 10.);
 
   for (int j = -1; j <= 0; j++) {
     for (int i = -1; i <= 0; i++) {
@@ -57,15 +56,11 @@ vec3 voronoi(vec2 pos, float gridSize) {
       vec2 neighborOrigin = cellOrigin + neighbor;
       vec2 neighborCenter = random2(neighborOrigin);
       float d = length(neighbor + neighborCenter - cellPos);
-
-      if(d < dist) {
-        dist = d;
-        center = neighborOrigin + neighborCenter;
-      }
+      ret = mix(ret, vec3(neighborOrigin + neighborCenter, d), step(d, ret.z));
     }
   }
 
-  return vec3(center, dist) * gridSize;
+  return ret * gridSize;
 }
 
 // ---- main (inspired by https://ae-style.net/tutorials/e06.html)
