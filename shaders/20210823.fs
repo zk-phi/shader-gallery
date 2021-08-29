@@ -94,14 +94,15 @@ vec3 softlight(vec3 base, vec3 ref) {
   return mix(res1, res2, flag);
 }
 
-float star(vec2 pos, float gridSize, float radius, float growRadius, float threshold, float minBrightness, float randomFactor, float matatakiFactor) {
+vec3 star(vec2 pos, float gridSize, float radius, float growRadius, float threshold, float minBrightness, float randomFactor, float matatakiFactor) {
   vec3 voronoi = voronoi(pos, gridSize);
   float star = 1. - smoothstep(0., radius, voronoi.z);
   float glow = 1. - smoothstep(0., growRadius, voronoi.z);
   float flag = step(threshold, random(voronoi.xy / resolution));
   float matataki = matatakiFactor * random(voronoi.xy + time * .001);
-  float random = randomFactor * random(voronoi.xy);
-  return flag * (minBrightness + random + matataki) * (star + .1 * glow);
+  float randomBrightness = randomFactor * random(voronoi.xy);
+  vec3 color = mix(vec3(.6, .7, 1.), vec3(1., .7, .6), smoothstep(.5, 1., random(voronoi.xy + .1)));
+  return flag * color * (minBrightness + randomBrightness + matataki) * (star + .1 * glow);
 }
 
 void main(void) {
@@ -132,13 +133,13 @@ void main(void) {
 
   // small stars
   float smallStarDensity = .9 * localStarDensity;
-  float starValue1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, 1., .1);
-  color = mix(color, starColor, starValue1);
+  vec3 star1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, .8, .1);
+  color += star1;
 
   // large stars
   float largeStarDensity = .9 * localStarDensity;
-  float starValue2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .2, .5, .4);
-  color = mix(color, starColor, starValue2);
+  vec3 star2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .0, .7, .3);
+  color += star2;
 
   // skyline
   float skyline1 = fractal(vec2(coord.x * .003));
