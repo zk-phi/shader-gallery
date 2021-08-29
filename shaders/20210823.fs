@@ -116,7 +116,7 @@ void main(void) {
 
   // bg noise
   vec3 noise = vec3(fractal(vec2(coord.x + 10. * time, coord.y) * .01));
-  color = softlight(color, noise * .5);
+  color = softlight(color, noise * .7);
 
   // light
   float lightGradLen = length(uv - vec2(.4, 0.));
@@ -129,19 +129,16 @@ void main(void) {
   // stars glow
   float localStarDensity = min(1., fractal(starCoord * .005) * 1.8);
   color = mix(color, starColor, .2 * pow(1. - localStarDensity, 2.));
-  // color = vec3(1.) * pow(1. - localStarDensity, 1.5);
 
   // small stars
   float smallStarDensity = .9 * localStarDensity;
   float starValue1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, 1., .1);
   color = mix(color, starColor, starValue1);
-  // color = vec3(starValue1);
 
   // large stars
   float largeStarDensity = .9 * localStarDensity;
   float starValue2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .2, .5, .4);
   color = mix(color, starColor, starValue2);
-  // color = vec3(starValue2);
 
   // skyline
   float skyline1 = fractal(vec2(coord.x * .003));
