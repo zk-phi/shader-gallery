@@ -94,7 +94,7 @@ vec3 softlight(vec3 base, vec3 ref) {
   return mix(res1, res2, flag);
 }
 
-vec3 star(vec2 pos, float gridSize, float radius, float growRadius, float threshold, float minBrightness, float randomFactor, float matatakiFactor) {
+vec4 star(vec2 pos, float gridSize, float radius, float growRadius, float threshold, float minBrightness, float randomFactor, float matatakiFactor) {
   vec3 voronoi = voronoi(pos, gridSize);
   float star = 1. - smoothstep(0., radius, voronoi.z);
   float glow = 1. - smoothstep(0., growRadius, voronoi.z);
@@ -102,7 +102,7 @@ vec3 star(vec2 pos, float gridSize, float radius, float growRadius, float thresh
   float matataki = matatakiFactor * random(voronoi.xy + time * .001);
   float randomBrightness = randomFactor * random(voronoi.xy);
   vec3 color = mix(vec3(.6, .7, 1.), vec3(1., .7, .6), smoothstep(.5, 1., random(voronoi.xy + .1)));
-  return flag * color * (minBrightness + randomBrightness + matataki) * (star + .1 * glow);
+  return vec4(color, flag * (minBrightness + randomBrightness + matataki) * (star + .1 * glow));
 }
 
 void main(void) {
@@ -112,40 +112,54 @@ void main(void) {
   vec2 starCoord = rot2d(coord - rotCenter, - time * .0025) + rotCenter;
   vec2 uv = coord / resolution;
 
-  // bg
-  vec3 color = mix(vec3(.0, .05, .19), vec3(0.), uv.y);
+  vec4 color = vec4(0.);
 
-  // bg noise
+  // ---- bg
+
+  // base gradient
+  vec3 bg = mix(vec3(.0, .05, .19), vec3(0.), uv.y);
+
+  // noise
   vec3 noise = vec3(fractal(vec2(coord.x + 10. * time, coord.y) * .01));
-  color = softlight(color, noise * .7);
+  bg = softlight(bg, noise * .7);
 
   // light
   float lightGradLen = length(uv - vec2(.4, 0.));
   float lightPos = pow(max(0., 1. - lightGradLen / .9), 1.3);
   vec3 light = mix(vec3(.0, .04, .16), vec3(.34, .67, .88), lightPos);
-  color += light * .5;
+  bg += light * .5;
+
+  color = vec4(bg, 1.);
+
+  // ---- stars
 
   vec3 starColor = vec3(.6, .7, 1.);
 
   // stars glow
   float localStarDensity = min(1., fractal(starCoord * .005) * 1.8);
-  color = mix(color, starColor, .2 * pow(1. - localStarDensity, 2.));
+  float glowValue = .2 * pow(1. - localStarDensity, 2.);
+  color += vec4(starColor * glowValue, glowValue);
 
   // small stars
   float smallStarDensity = .9 * localStarDensity;
-  vec3 star1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, .8, .1);
-  color += star1;
+  vec4 star1 = star(starCoord, 4., 1., 3., smallStarDensity, .0, .8, .1);
+  color += vec4(star1.rgb * star1.a, star1.a);
 
   // large stars
   float largeStarDensity = .9 * localStarDensity;
-  vec3 star2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .0, .7, .3);
-  color += star2;
+  vec4 star2 = star(starCoord, 25., 2.5, 7.5, largeStarDensity, .0, .7, .3);
+  color += vec4(star2.rgb * star2.a, star2.a);
+
+  float alpha = min(1., color.a);
+  color = vec4(color.rgb / alpha, alpha);
+
+  // ---- skyline
 
   // skyline
   float skyline1 = fractal(vec2(coord.x * .003));
   float skyline2 = (1. - skyline1) * fractal(vec2(coord.x * .1));
   float threshold = resolution.y * (.1  + .1 * skyline1 + .02 * skyline2);
-  color *= smoothstep(threshold, threshold + 5., coord.y);
+  color = mix(color, vec4(vec3(0.), 1.), smoothstep(threshold + 5., threshold, coord.y));
 
-  gl_FragColor = vec4(color, 1.);
+  gl_FragColor = color;
 }
